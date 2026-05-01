@@ -1,0 +1,12 @@
+name: misinfo
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - numpy
+  - pandas
+  - scikit-learn
+  - jupyterlab
+  - pip:
+      - -e .[dev]

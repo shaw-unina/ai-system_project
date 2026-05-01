@@ -85,6 +85,11 @@ target/
 
 # Mypy cache
 .mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
 
 # Exclude virtual environment
 .venv/
