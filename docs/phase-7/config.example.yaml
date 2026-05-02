@@ -1,0 +1,24 @@
+# Phase 7 — example config for the real run.
+# The smoke path uses defaults from src/misinfo/eval/phase7.Phase7Config and
+# does not read this file. A future real-run branch can yaml.safe_load this.
+
+systems:
+  - rag_identity         # Phase 7 control (no abstention)
+  - rag_temperature      # scalar T calibration
+  - rag_isotonic         # non-parametric calibrator
+  - rag_retrieval_gated  # hard rule on retrieval signals
+  - rag_fusion           # learned 3-feature logistic — headline system
+
+conditions:
+  - clean                # AVeriTeC v2 dev (clean)
+  - newswire             # LLM-paraphrase attack family 1
+  - tabloid              # family 2
+  - social               # family 3
+  # - drift              # late 20% of dev by claim_date (Phase 3 §2)
+  # - cross_domain       # FakeNewsNet PolitiFact text slice
+
+seeds: [1, 2, 3]
+target_coverage: 0.7     # H1.b operating point
+
+out_dir: reports/phase7
+limit: null              # null = full dev set; integer = per-cell cap for cheap reruns

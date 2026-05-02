@@ -155,6 +155,26 @@ def _cmd_eval(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_phase7(args: argparse.Namespace) -> int:
+    from misinfo.eval.phase7 import Phase7Config, run_phase7, write_runs_metadata
+    from misinfo.eval.reports_phase7 import write_all_reports
+
+    config = Phase7Config(
+        out_dir=args.out,
+        smoke=args.smoke,
+        limit=args.limit,
+    )
+    runs = run_phase7(config)
+    write_runs_metadata(runs, args.out / "runs_metadata.json")
+    written = write_all_reports(runs, args.out)
+    sys.stdout.write(json.dumps(
+        {"out": str(args.out), "reports": {k: str(v) for k, v in written.items()},
+         "n_cells": len(runs.cells)},
+        indent=2,
+    ) + "\n")
+    return 0
+
+
 def _cmd_calibrate(args: argparse.Namespace) -> int:
     from misinfo.abstention.registry import make_head
     from misinfo.abstention.threshold import records_from_jsonl
@@ -200,6 +220,13 @@ def build_parser() -> argparse.ArgumentParser:
     pe.add_argument("--tau", type=float, default=None)
     pe.add_argument("--target-coverage", type=float, default=None)
     pe.set_defaults(func=_cmd_eval)
+
+    p7 = sub.add_parser("phase7", help="Run the Phase 7 evaluation harness")
+    p7.add_argument("--out", type=Path, default=Path("reports/phase7"))
+    p7.add_argument("--smoke", action="store_true",
+                    help="Use synthetic data + MockBackend (offline; the only mode implemented)")
+    p7.add_argument("--limit", type=int, default=None)
+    p7.set_defaults(func=_cmd_phase7)
 
     pc = sub.add_parser("calibrate", help="Fit a calibrated abstention head")
     pc.add_argument("--head", type=str, required=True,
