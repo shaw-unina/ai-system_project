@@ -33,5 +33,5 @@ def test_metrics_increments_per_request():
         None,
     )
     assert line is not None
-    n = int(line.rsplit(" ", 1)[-1])
+    n = float(line.rsplit(" ", 1)[-1])
     assert n >= 3

@@ -1,72 +1,78 @@
-"""Tiny in-process metrics store.
+"""Prometheus-client backed metrics. Phase 9 swap of the Phase 8 in-process store.
 
-Exposes Prometheus text exposition format from a small set of counters and a
-single latency histogram. Intentionally avoids the `prometheus-client` dep —
-Phase 9 can swap this for the real client when monitoring goes in.
+Public API kept identical to Phase 8 so the API tests + endpoint contract are
+unchanged. Same metric names; histograms gain a `confidence` series so the
+Grafana dashboard can render verdict-confidence over time.
 """
 from __future__ import annotations
 
 import threading
-from collections import defaultdict
-from dataclasses import dataclass, field
+
+from prometheus_client import (
+    CollectorRegistry,
+    Counter,
+    Histogram,
+    generate_latest,
+)
 
 LATENCY_BUCKETS = (0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0)
+CONFIDENCE_BUCKETS = (0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
+
+# Sentinel registry constructed once; metrics live on it. Test-only `reset()`
+# rebuilds the metrics on a fresh registry to keep test isolation clean.
+_lock = threading.Lock()
 
 
-@dataclass
-class _MetricsStore:
-    requests_total: dict[tuple[str, str], int] = field(default_factory=lambda: defaultdict(int))
-    verdicts_total: dict[str, int] = field(default_factory=lambda: defaultdict(int))
-    bucket_counts: dict[float, int] = field(default_factory=lambda: defaultdict(int))
-    latency_sum: float = 0.0
-    latency_count: int = 0
-    _lock: threading.Lock = field(default_factory=threading.Lock)
+class _Metrics:
+    def __init__(self) -> None:
+        self._build()
+
+    def _build(self) -> None:
+        # Use a private registry so we can wipe it on reset() without colliding
+        # with anything else in the default REGISTRY.
+        self._registry = CollectorRegistry()
+        self.requests = Counter(
+            "misinfo_requests_total",
+            "Count of HTTP requests by endpoint and status.",
+            ["endpoint", "status"],
+            registry=self._registry,
+        )
+        self.verdicts = Counter(
+            "misinfo_verdicts_total",
+            "Count of verdicts emitted by label.",
+            ["verdict"],
+            registry=self._registry,
+        )
+        self.latency = Histogram(
+            "misinfo_latency_seconds",
+            "Request end-to-end latency in seconds.",
+            buckets=LATENCY_BUCKETS,
+            registry=self._registry,
+        )
+        self.confidence = Histogram(
+            "misinfo_confidence",
+            "Distribution of verdict confidences.",
+            buckets=CONFIDENCE_BUCKETS,
+            registry=self._registry,
+        )
 
     def observe_request(self, endpoint: str, status: int, latency_s: float) -> None:
-        with self._lock:
-            self.requests_total[(endpoint, str(status))] += 1
-            self.latency_sum += latency_s
-            self.latency_count += 1
-            for b in LATENCY_BUCKETS:
-                if latency_s <= b:
-                    self.bucket_counts[b] += 1
-            self.bucket_counts[float("inf")] += 1
+        with _lock:
+            self.requests.labels(endpoint=endpoint, status=str(status)).inc()
+            self.latency.observe(latency_s)
 
-    def observe_verdict(self, verdict: str) -> None:
-        with self._lock:
-            self.verdicts_total[verdict] += 1
+    def observe_verdict(self, verdict: str, confidence: float | None = None) -> None:
+        with _lock:
+            self.verdicts.labels(verdict=verdict).inc()
+            if confidence is not None:
+                self.confidence.observe(float(confidence))
 
     def reset(self) -> None:
-        with self._lock:
-            self.requests_total.clear()
-            self.verdicts_total.clear()
-            self.bucket_counts.clear()
-            self.latency_sum = 0.0
-            self.latency_count = 0
+        with _lock:
+            self._build()
 
     def render_prometheus(self) -> str:
-        lines: list[str] = []
-        lines.append("# HELP misinfo_requests_total Count of HTTP requests by endpoint and status.")
-        lines.append("# TYPE misinfo_requests_total counter")
-        for (endpoint, status), n in sorted(self.requests_total.items()):
-            lines.append(f'misinfo_requests_total{{endpoint="{endpoint}",status="{status}"}} {n}')
-
-        lines.append("# HELP misinfo_verdicts_total Count of verdicts emitted by label.")
-        lines.append("# TYPE misinfo_verdicts_total counter")
-        for verdict, n in sorted(self.verdicts_total.items()):
-            lines.append(f'misinfo_verdicts_total{{verdict="{verdict}"}} {n}')
-
-        lines.append("# HELP misinfo_latency_seconds Request end-to-end latency.")
-        lines.append("# TYPE misinfo_latency_seconds histogram")
-        for b in LATENCY_BUCKETS:
-            lines.append(f'misinfo_latency_seconds_bucket{{le="{b}"}} {self.bucket_counts.get(b, 0)}')
-        lines.append(
-            f'misinfo_latency_seconds_bucket{{le="+Inf"}} '
-            f'{self.bucket_counts.get(float("inf"), 0)}'
-        )
-        lines.append(f"misinfo_latency_seconds_sum {self.latency_sum:.6f}")
-        lines.append(f"misinfo_latency_seconds_count {self.latency_count}")
-        return "\n".join(lines) + "\n"
+        return generate_latest(self._registry).decode("utf-8")
 
 
-METRICS = _MetricsStore()
+METRICS = _Metrics()

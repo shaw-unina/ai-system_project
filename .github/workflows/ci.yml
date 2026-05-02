@@ -1,0 +1,49 @@
+name: ci
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e '.[dev,inference,service]'
+
+      - name: Lint (ruff)
+        run: ruff check src tests
+
+      - name: Type check (mypy)
+        run: mypy src/misinfo
+        continue-on-error: true   # advisory until Phase 11; existing diagnostics are IDE-only
+
+      - name: Tests + coverage gate
+        run: pytest --cov=src/misinfo --cov-report=term --cov-fail-under=70
+
+      - name: Quality gate (frozen regression set)
+        run: |
+          python -c "
+          import json, pathlib
+          from misinfo.eval.harness import run_eval
+          from tests.conftest_api import build_mock_factchecker
+          fc = build_mock_factchecker()
+          rows = [json.loads(l) for l in pathlib.Path('tests/data/regression_frozen.jsonl').read_text().splitlines() if l.strip()]
+          results = run_eval(fc, rows, system='ci', dataset_name='regression')
+          pathlib.Path('regression_results.json').write_text(results.model_dump_json())
+          "
+          python -m misinfo.cli gate \
+            --results regression_results.json \
+            --thresholds docs/phase-9/thresholds.example.yaml

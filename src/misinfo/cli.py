@@ -155,6 +155,57 @@ def _cmd_eval(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_monitor_snapshot(args: argparse.Namespace) -> int:
+    from misinfo.eval.results import Results
+    from misinfo.monitoring.drift import snapshots_from_results
+    from misinfo.monitoring.snapshot import save_snapshots
+
+    results = Results.model_validate_json(args.input.read_text())
+    snaps = snapshots_from_results(results)
+    save_snapshots(snaps, args.output)
+    sys.stdout.write(json.dumps({
+        "input": str(args.input), "output": str(args.output),
+        "features": [s.name for s in snaps],
+    }, indent=2) + "\n")
+    return 0
+
+
+def _cmd_monitor_drift(args: argparse.Namespace) -> int:
+    from misinfo.monitoring.drift import drift_report, render_drift_markdown
+    from misinfo.monitoring.snapshot import load_snapshots
+
+    ref = load_snapshots(args.reference)
+    live = load_snapshots(args.live)
+    report = drift_report(ref, live)
+    md = render_drift_markdown(report)
+    if args.report:
+        args.report.parent.mkdir(parents=True, exist_ok=True)
+        args.report.write_text(md)
+    sys.stdout.write(json.dumps({
+        "overall": report.overall,
+        "psi": {k: round(v, 4) for k, v in report.psi_by_feature.items()},
+    }, indent=2) + "\n")
+    return 0 if report.overall != "major" else 1
+
+
+def _cmd_gate(args: argparse.Namespace) -> int:
+    from misinfo.monitoring.ci import evaluate_results
+
+    report = evaluate_results(args.results, args.thresholds)
+    if args.report:
+        args.report.parent.mkdir(parents=True, exist_ok=True)
+        args.report.write_text(report.render_markdown())
+    sys.stdout.write(json.dumps({
+        "passed": report.passed,
+        "outcomes": [
+            {"name": o.gate.name, "passed": o.passed,
+             "observed": round(o.observed, 4), "reason": o.reason}
+            for o in report.outcomes
+        ],
+    }, indent=2) + "\n")
+    return 0 if report.passed else 1
+
+
 def _cmd_serve(args: argparse.Namespace) -> int:
     import uvicorn  # lazy: requires the [service] extra
 
@@ -249,6 +300,26 @@ def build_parser() -> argparse.ArgumentParser:
     pe.add_argument("--tau", type=float, default=None)
     pe.add_argument("--target-coverage", type=float, default=None)
     pe.set_defaults(func=_cmd_eval)
+
+    pm = sub.add_parser("monitor", help="Drift snapshots and reports")
+    pm_sub = pm.add_subparsers(dest="monitor_cmd", required=True)
+
+    pms = pm_sub.add_parser("snapshot", help="Build a distribution snapshot from a Results JSON")
+    pms.add_argument("--input", type=Path, required=True)
+    pms.add_argument("--output", type=Path, required=True)
+    pms.set_defaults(func=_cmd_monitor_snapshot)
+
+    pmd = pm_sub.add_parser("drift", help="Compare a reference and live snapshot")
+    pmd.add_argument("--reference", type=Path, required=True)
+    pmd.add_argument("--live", type=Path, required=True)
+    pmd.add_argument("--report", type=Path, default=None)
+    pmd.set_defaults(func=_cmd_monitor_drift)
+
+    pg = sub.add_parser("gate", help="Run quality gates against a Results JSON")
+    pg.add_argument("--results", type=Path, required=True)
+    pg.add_argument("--thresholds", type=Path, required=True)
+    pg.add_argument("--report", type=Path, default=None)
+    pg.set_defaults(func=_cmd_gate)
 
     ps = sub.add_parser("serve", help="Run the FastAPI service via uvicorn")
     ps.add_argument("--host", type=str, default="0.0.0.0")

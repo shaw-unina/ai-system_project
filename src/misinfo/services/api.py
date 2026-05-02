@@ -42,7 +42,7 @@ from misinfo.services.schemas import (
 
 
 def _to_response(verdict, request_id: str, latency_ms: float) -> VerifyResponse:
-    METRICS.observe_verdict(verdict.verdict)
+    METRICS.observe_verdict(verdict.verdict, verdict.confidence)
     return VerifyResponse(
         verdict=verdict.verdict,
         confidence=verdict.confidence,

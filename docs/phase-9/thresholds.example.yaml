@@ -1,0 +1,31 @@
+# Example quality gates. Loaded by `misinfo gate`.
+#
+# Real release-time thresholds land in Phase 11; this file is the *contract*
+# (operators, structure) and a sanity ceiling/floor for the smoke regression
+# test that runs in CI.
+
+gates:
+  - name: accuracy_floor
+    metric: accuracy
+    op: ge
+    value: 0.10                # synthetic-MockBackend floor; real value Phase 11
+
+  - name: f1_floor
+    metric: f1_macro
+    op: ge
+    value: 0.05
+
+  - name: ece_ceiling
+    metric: ece
+    op: le
+    value: 0.95                # synthetic ceiling; tightens at release
+
+  - name: abstention_band_high
+    metric: abstention_rate
+    op: le
+    value: 0.50
+
+  - name: aurc_ceiling
+    metric: aurc
+    op: le
+    value: 0.95
