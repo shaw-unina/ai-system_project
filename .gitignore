@@ -99,3 +99,9 @@ htmlcov/
 
 # exclude data from source control by default
 # /data/
+
+# Frontend (Phase 10)
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.turbo/

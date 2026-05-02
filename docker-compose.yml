@@ -73,6 +73,21 @@ services:
     depends_on:
       - prometheus
 
+  # ----- Phase 10 frontend dashboard -----
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: misinfo-frontend:dev
+    environment:
+      - BACKEND_URL=http://app:8000
+      - NODE_ENV=production
+    ports:
+      - "3002:3000"
+    depends_on:
+      app:
+        condition: service_healthy
+
 volumes:
   langfuse-db-data:
   prometheus-data:

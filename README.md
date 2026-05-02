@@ -24,6 +24,10 @@ docker compose run --rm app
 
 The `app` service runs a smoke test (`import misinfo`) until the FastAPI service arrives in Phase 8.
 
+## Frontend (Phase 10)
+
+A Next.js 15 dashboard lives in [frontend/](frontend/) — `/verify` for end-user claim submission and `/operator` for live `/metrics` tiles, Phase 7 reports, and session low-confidence cases. `docker compose up --build` brings it up at `http://localhost:3002` (the FastAPI service stays on `:8000`). For local dev: `cd frontend && npm install && npm run dev`. See [docs/phase-10-dashboard.md](docs/phase-10-dashboard.md).
+
 ## Configuration
 
 Settings are loaded by `misinfo.config.get_settings()` from (in priority order) process env, `.env`, then defaults. `.env` is gitignored — never commit secrets.

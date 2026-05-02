@@ -40,7 +40,7 @@ If any one of the three fails, the project ships partially and the report record
 | NFR-Tput | Throughput | Phase 8 | same |
 | NFR-Expl-1 | Explainability | Phase 5 | `tests/test_verify_contract.py` |
 | NFR-Trans-1 | Transparency | Phase 9 / 11 | `docs/MODEL-CARD.md`, `docs/DATASET-CARDS.md`, `docs/LIMITATIONS.md` |
-| NFR-Trans-2 | Transparency | Phase 8 / 10 | API spec, dashboard banner |
+| NFR-Trans-2 | Transparency | Phase 8 / 10 | API spec, dashboard banner — implemented (smoke pending real-run) |
 | NFR-Fair-1 | Fairness | Phase 7 | `reports/fairness.md` |
 | NFR-Fair-2 | Fairness | Phase 7 | same |
 | NFR-Repro-1 | Reproducibility | Phase 0 / 5 | re-run check in `tests/test_determinism.py` |
