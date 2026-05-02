@@ -15,6 +15,7 @@ class ClaimResult(BaseModel):
     verdict: Verdict
     correct: bool
     latency_ms: float | None = None
+    signals: dict[str, float] = Field(default_factory=dict)
 
 
 class AggregateMetrics(BaseModel):

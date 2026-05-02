@@ -51,6 +51,7 @@ class RAGFactChecker:
         model_version: str | None = None,
         top_k: int = 5,
         max_questions: int = 3,
+        abstain_threshold: float | None = None,
     ) -> None:
         self._decomposer = decomposer
         self._retriever = retriever
@@ -62,6 +63,8 @@ class RAGFactChecker:
         self._model_version = model_version
         self._top_k = top_k
         self._max_questions = max_questions
+        self._tau = abstain_threshold
+        self.last_signals: dict[str, float] = {}
 
     @traced("verify")
     def verify(self, claim: str) -> Verdict:
@@ -76,7 +79,10 @@ class RAGFactChecker:
 
         aggregated = self._aggregator.aggregate(claim, answers)
         signals = _retrieval_signals(per_q_evidence)
+        self.last_signals = signals
         label, confidence = self._abstention.score(aggregated, signals)
+        if self._tau is not None and confidence < self._tau:
+            label = "Abstain"
 
         # Flatten and dedupe evidence across the three sub-questions
         seen: set[str] = set()

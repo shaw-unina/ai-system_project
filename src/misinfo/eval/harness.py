@@ -71,6 +71,7 @@ def run_eval(
         t0 = time.perf_counter()
         verdict = factchecker.verify(claim)
         t1 = time.perf_counter()
+        signals = dict(getattr(factchecker, "last_signals", {}) or {})
         per_claim.append(
             ClaimResult(
                 claim_id=str(cid),
@@ -79,6 +80,7 @@ def run_eval(
                 verdict=verdict,
                 correct=(verdict.verdict == gold),
                 latency_ms=1000.0 * (t1 - t0),
+                signals=signals,
             )
         )
 

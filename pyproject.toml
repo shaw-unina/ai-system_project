@@ -32,6 +32,8 @@ dev = [
 inference = [
     "groq>=0.11",
     "langfuse>=2,<3",
+    "scikit-learn>=1.3,<2",
+    "joblib>=1.3",
 ]
 retrieval = [
     "rank-bm25>=0.2",
