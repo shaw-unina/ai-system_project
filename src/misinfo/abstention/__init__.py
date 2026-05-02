@@ -1,4 +1,4 @@
-"""Abstention head. Phase 6 fills in the concrete confidence-fusion logic."""
+from misinfo.abstention.identity import IdentityAbstentionHead
 from misinfo.pipeline.interfaces import AbstentionHead
 
-__all__ = ["AbstentionHead"]
+__all__ = ["AbstentionHead", "IdentityAbstentionHead"]

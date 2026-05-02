@@ -4,7 +4,7 @@ from misinfo.inference import LanguageModel, MockBackend, get_backend
 
 
 def test_mock_backend_resolves() -> None:
-    b = get_backend("mock")
+    b = get_backend("mock", cache=False)
     assert isinstance(b, MockBackend)
     assert isinstance(b, LanguageModel)
     assert b.model_id == "mock"

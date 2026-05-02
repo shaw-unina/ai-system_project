@@ -16,7 +16,11 @@ dependencies = [
     "pyyaml",
     "loguru",
     "numpy",
+    "scipy",
 ]
+
+[project.scripts]
+misinfo = "misinfo.cli:main"
 
 [project.optional-dependencies]
 dev = [
@@ -28,6 +32,15 @@ dev = [
 inference = [
     "groq>=0.11",
     "langfuse>=2,<3",
+]
+retrieval = [
+    "rank-bm25>=0.2",
+    "sentence-transformers>=2.7",
+    "faiss-cpu>=1.7",
+]
+encoder = [
+    "transformers>=4.40",
+    "torch>=2.0",
 ]
 local = [
     "llama-cpp-python>=0.3",
@@ -50,4 +63,7 @@ files = ["src/misinfo"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q"
+addopts = "-q -m 'not live'"
+markers = [
+    "live: hits a live external API (Groq, Langfuse). Skipped by default.",
+]

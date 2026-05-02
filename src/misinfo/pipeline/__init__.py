@@ -6,6 +6,7 @@ from misinfo.pipeline.interfaces import (
     FactChecker,
     Retriever,
 )
+from misinfo.pipeline.orchestrator import RAGFactChecker
 
 __all__ = [
     "FactChecker",
@@ -14,4 +15,5 @@ __all__ = [
     "Answerer",
     "Aggregator",
     "AbstentionHead",
+    "RAGFactChecker",
 ]

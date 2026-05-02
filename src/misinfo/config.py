@@ -28,6 +28,7 @@ class Settings(BaseSettings):
 
     # Phase 4 (revised) — inference backend + observability
     misinfo_backend: Backend = "groq"
+    misinfo_cache: bool = True
     groq_api_key: str | None = Field(default=None)
     groq_model: str = "llama-3.3-70b-versatile"
     groq_fallback_model: str = "qwen/qwen-2.5-32b"

@@ -1,4 +1,5 @@
-"""Verify stage: per-question Answerer + Aggregator. Phase 5 fills these in."""
 from misinfo.pipeline.interfaces import Aggregator, Answerer
+from misinfo.verify.aggregator import LLMAggregator
+from misinfo.verify.answerer import LLMAnswerer
 
-__all__ = ["Answerer", "Aggregator"]
+__all__ = ["Answerer", "Aggregator", "LLMAnswerer", "LLMAggregator"]

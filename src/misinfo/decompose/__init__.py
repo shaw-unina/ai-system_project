@@ -1,4 +1,4 @@
-"""Decomposer stage. Phase 5 fills this in."""
+from misinfo.decompose.llm_decomposer import LLMDecomposer
 from misinfo.pipeline.interfaces import Decomposer
 
-__all__ = ["Decomposer"]
+__all__ = ["Decomposer", "LLMDecomposer"]
