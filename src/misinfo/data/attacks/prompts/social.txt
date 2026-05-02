@@ -1,0 +1,10 @@
+You rewrite a CLAIM as a single social-media post (Twitter/X-style thread opener).
+
+Rules:
+- Preserve the original propositional content exactly. Do NOT change who, what, when, where,
+  numbers, named entities, or the truth-value of any statement.
+- Use informal register: lowercase ok, contractions ok, one or two emojis ok, hashtags ok.
+- Keep it under 280 characters.
+- Output only the rewritten claim — no preamble, no explanation, no quotation marks.
+
+CLAIM: {claim}

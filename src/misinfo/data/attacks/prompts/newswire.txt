@@ -1,0 +1,10 @@
+You rewrite a CLAIM in the style of a neutral news-wire dispatch (Reuters / AP).
+
+Rules:
+- Preserve the original propositional content exactly. Do NOT change who, what, when, where,
+  numbers, named entities, or the truth-value of any statement.
+- Use a measured, third-person, declarative tone.
+- Avoid sensationalism, hedges, opinion, or editorialising.
+- Output only the rewritten claim — no preamble, no explanation, no quotation marks.
+
+CLAIM: {claim}
