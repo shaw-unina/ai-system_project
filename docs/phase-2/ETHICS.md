@@ -34,6 +34,15 @@ The asymmetry is deliberate: making the *defence* reproducible is the project's 
 - We do not scrape live social media or private posts.
 - The service does not persist user-submitted claims by default (NFR-Priv-1). When persistence is enabled for evaluation runs, the run manifest hashes the input rather than storing the raw text.
 
+## Hosted inference (Groq)
+
+Per ADR-0002, the default inference backend is **Groq** — a hosted inference provider running open-weight models (Llama-3.3-70B, Qwen-2.5-32B). This means **claim text leaves the local environment** for the duration of each `verify(...)` call.
+
+- For the controlled experiment we send only public AVeriTeC v2 claims, which are already published by their fact-checkers. No new disclosure.
+- For arbitrary user-submitted claims (UC-1), the API documentation and dashboard copy must surface this fact (NFR-Trans-2).
+- Sensitive deployments switch to the optional `llama_cpp` backend (offline, slower).
+- Trace data (prompts, responses, latencies, token counts) is captured by **Langfuse Cloud** at `https://cloud.langfuse.com` — this means trace data also leaves the box. The self-hosted Langfuse v2 stack remains available via `docker-compose.yml` as a fallback for sensitive deployments; switch by setting `LANGFUSE_HOST=http://langfuse-server:3000` (compose-internal) or `http://localhost:3000` (host).
+
 ## Truth-claim posture
 
 The system labels claims as `Supported`, `Refuted`, `NotEnoughEvidence`, or `Abstain` *with respect to the available evidence corpus*. It does not label claims as "true" or "false" in the abstract. This distinction shows up in:

@@ -6,6 +6,36 @@ services:
     image: misinfo:dev
     env_file:
       - .env
+    environment:
+      - LANGFUSE_HOST=http://langfuse-server:3000
+      - MISINFO_BACKEND=${MISINFO_BACKEND:-groq}
+    depends_on:
+      - langfuse-server
     volumes:
       - ./data:/app/data
       - ./models:/app/models
+
+  langfuse-server:
+    image: langfuse/langfuse:2
+    depends_on:
+      - langfuse-db
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@langfuse-db:5432/postgres
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=${LANGFUSE_NEXTAUTH_SECRET:-change-me-in-prod}
+      - SALT=${LANGFUSE_SALT:-change-me-in-prod}
+      - TELEMETRY_ENABLED=false
+    ports:
+      - "3000:3000"
+
+  langfuse-db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - langfuse-db-data:/var/lib/postgresql/data
+
+volumes:
+  langfuse-db-data:

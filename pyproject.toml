@@ -25,6 +25,13 @@ dev = [
     "ruff",
     "mypy",
 ]
+inference = [
+    "groq>=0.11",
+    "langfuse>=2,<3",
+]
+local = [
+    "llama-cpp-python>=0.3",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]

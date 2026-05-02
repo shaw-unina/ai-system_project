@@ -78,14 +78,14 @@ NFR-Trans-1/2 are inspired by EU AI Act Article 13 (transparency to deployers) a
 
 | ID | Metric | Threshold | Verified in |
 |---|---|---|---|
-| **NFR-Repro-1** | Re-run with identical commit + config + data hash | Bit-identical metrics | Phase 0 / 5 |
+| **NFR-Repro-1** | Re-run with identical commit + config + data hash | Bit-identical metrics on the optional `llama_cpp` backend; on `groq` (default), `Verdict.metadata` records `(backend, model_id, model_version, seed, temperature, langfuse_trace_id)` and re-runs reproduce within the cross-machine tolerances in [SUCCESS-CRITERIA.md](SUCCESS-CRITERIA.md) | Phase 0 / 5 |
 | **NFR-Repro-2** | Random-seed control across all training/eval scripts | Asserted in tests | Phase 5 |
 
 ### Privacy & data handling
 
 | ID | Metric | Threshold | Verified in |
 |---|---|---|---|
-| **NFR-Priv-1** | No PII persisted by default; logs redact claim text on opt-out flag | Implementation review | Phase 8 |
+| **NFR-Priv-1** | No PII persisted by default; logs redact claim text on opt-out flag. **Note:** with `MISINFO_BACKEND=groq` (default), claim text leaves the box to Groq's hosted inference. Scoped to public AVeriTeC v2 claims for the controlled experiment; documented in [ETHICS.md](ETHICS.md). For sensitive deployments, use the optional `llama_cpp` backend. | Implementation review | Phase 8 |
 | **NFR-Priv-2** | Datasets used are public, with documented licences | Dataset cards check pass | Phase 3 |
 
 ### Maintainability
