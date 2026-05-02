@@ -155,6 +155,35 @@ def _cmd_eval(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_serve(args: argparse.Namespace) -> int:
+    import uvicorn  # lazy: requires the [service] extra
+
+    uvicorn.run(
+        "misinfo.services.api:app",
+        host=args.host,
+        port=args.port,
+        workers=args.workers,
+        reload=args.reload,
+    )
+    return 0
+
+
+def _cmd_probe(args: argparse.Namespace) -> int:
+    import httpx  # lazy
+
+    from misinfo.services.probe import probe_latency
+
+    with httpx.Client(base_url=args.url, timeout=120.0) as client:
+        report = probe_latency(client, n=args.n)
+    sys.stdout.write(json.dumps({
+        "n": report.n, "errors": report.errors,
+        "mean_ms": round(report.mean_ms, 2),
+        "p50_ms": round(report.p50_ms, 2),
+        "p95_ms": round(report.p95_ms, 2),
+    }, indent=2) + "\n")
+    return 0
+
+
 def _cmd_phase7(args: argparse.Namespace) -> int:
     from misinfo.eval.phase7 import Phase7Config, run_phase7, write_runs_metadata
     from misinfo.eval.reports_phase7 import write_all_reports
@@ -220,6 +249,18 @@ def build_parser() -> argparse.ArgumentParser:
     pe.add_argument("--tau", type=float, default=None)
     pe.add_argument("--target-coverage", type=float, default=None)
     pe.set_defaults(func=_cmd_eval)
+
+    ps = sub.add_parser("serve", help="Run the FastAPI service via uvicorn")
+    ps.add_argument("--host", type=str, default="0.0.0.0")
+    ps.add_argument("--port", type=int, default=8000)
+    ps.add_argument("--workers", type=int, default=1)
+    ps.add_argument("--reload", action="store_true")
+    ps.set_defaults(func=_cmd_serve)
+
+    pp = sub.add_parser("probe", help="Probe a running misinfo service for latency")
+    pp.add_argument("--url", type=str, default="http://localhost:8000")
+    pp.add_argument("--n", type=int, default=20)
+    pp.set_defaults(func=_cmd_probe)
 
     p7 = sub.add_parser("phase7", help="Run the Phase 7 evaluation harness")
     p7.add_argument("--out", type=Path, default=Path("reports/phase7"))

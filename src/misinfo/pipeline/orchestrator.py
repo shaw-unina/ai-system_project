@@ -81,8 +81,15 @@ class RAGFactChecker:
         signals = _retrieval_signals(per_q_evidence)
         self.last_signals = signals
         label, confidence = self._abstention.score(aggregated, signals)
+        rationale = aggregated.rationale
         if self._tau is not None and confidence < self._tau:
             label = "Abstain"
+            reasons = ["confidence below threshold"]
+            if signals.get("evidence_coverage", 1.0) < 0.5:
+                reasons.append("retrieval coverage low")
+            if signals.get("mean_top1", 1.0) < 0.3:
+                reasons.append("evidence weakly relevant")
+            rationale = "Abstained: " + "; ".join(reasons) + "."
 
         # Flatten and dedupe evidence across the three sub-questions
         seen: set[str] = set()
@@ -97,7 +104,7 @@ class RAGFactChecker:
             verdict=label,  # type: ignore[arg-type]
             confidence=confidence,
             evidence=flat_evidence,
-            rationale=aggregated.rationale,
+            rationale=rationale,
             metadata=VerdictMetadata(
                 backend=self._backend_id,
                 model_id=self._model_id,
