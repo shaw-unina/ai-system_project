@@ -1,35 +1,35 @@
 import LowConfidenceTable from "@/components/LowConfidenceTable";
 import MetricsTiles from "@/components/MetricsTiles";
 import ReportList from "@/components/ReportList";
+import Tile from "@/components/operator/Tile";
 
 export default function OperatorPage() {
   return (
     <div className="space-y-8">
-      <section>
-        <h1 className="text-2xl font-semibold mb-3">Operator dashboard</h1>
-        <p className="text-sm text-slate-600">
-          Live tiles poll <code>/metrics</code> every 10 s. Reports come from{" "}
-          <code>reports/_smoke/</code>; switch to <code>reports/phase7/</code>{" "}
-          once a real run lands.
+      <header className="space-y-2">
+        <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-brand-700">
+          operator
         </p>
-      </section>
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">
+          Service health & cases
+        </h1>
+      </header>
 
-      <section>
-        <h2 className="text-lg font-semibold mb-2">Live tiles</h2>
-        <MetricsTiles />
-      </section>
+      <MetricsTiles />
 
-      <section>
-        <h2 className="text-lg font-semibold mb-2">Phase 7 reports</h2>
-        <ReportList />
-      </section>
-
-      <section>
-        <h2 className="text-lg font-semibold mb-2">
-          Recent low-confidence verdicts (this session)
-        </h2>
-        <LowConfidenceTable />
-      </section>
+      <div className="grid gap-3 lg:grid-cols-3">
+        <Tile title="Evaluation reports" className="lg:col-span-1">
+          <ReportList />
+        </Tile>
+        <Tile
+          title="Recent low-confidence verdicts"
+          hint="kept in this browser only"
+          className="lg:col-span-2"
+          testId="lowconf-section"
+        >
+          <LowConfidenceTable />
+        </Tile>
+      </div>
     </div>
   );
 }

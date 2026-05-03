@@ -1,4 +1,4 @@
-.PHONY: api serve test cov compose-up compose-down
+.PHONY: api serve test cov compose-up compose-down perf-latency perf-throughput perf-memory
 
 PY ?= /opt/anaconda3/envs/misinfo/bin/python
 
@@ -21,3 +21,12 @@ compose-up:
 
 compose-down:
 	docker compose down
+
+perf-latency:
+	$(PY) scripts/perf_bench.py latency --n 200
+
+perf-throughput:
+	$(PY) scripts/perf_bench.py throughput --n 100
+
+perf-memory:
+	$(PY) scripts/perf_bench.py memory --n 50

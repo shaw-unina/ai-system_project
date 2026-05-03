@@ -19,9 +19,16 @@ def set_factchecker_factory(factory: Callable[[], Any]) -> None:
 
 def _default_factory() -> Any:
     """Build the default FactChecker from Settings via the CLI builder."""
-    from misinfo.cli import _build_factchecker
+    from pathlib import Path
 
-    return _build_factchecker(corpus_path=None)
+    from misinfo.cli import _build_factchecker
+    from misinfo.config import REPO_ROOT, get_settings
+
+    s = get_settings()
+    corpus_path: Path | None = s.misinfo_corpus_path
+    if corpus_path is None and s.misinfo_corpus_profile is not None:
+        corpus_path = REPO_ROOT / f"data/processed/{s.misinfo_corpus_profile}_corpus.jsonl"
+    return _build_factchecker(corpus_path=corpus_path)
 
 
 @lru_cache(maxsize=1)

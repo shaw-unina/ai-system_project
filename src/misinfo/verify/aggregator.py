@@ -5,6 +5,7 @@ from misinfo.inference.base import LanguageModel
 from misinfo.observability import traced
 from misinfo.pipeline.prompts import load
 from misinfo.schemas import AggregatorOutput, QuestionAnswer
+from misinfo.verify.safety import wrap_user_content
 
 
 def _qa_block(answers: list[QuestionAnswer]) -> str:
@@ -24,7 +25,9 @@ class LLMAggregator:
 
     @traced("aggregate")
     def aggregate(self, claim: str, answers: list[QuestionAnswer]) -> AggregatorOutput:
-        prompt = self._template.format(claim=claim, qa_block=_qa_block(answers))
+        prompt = self._template.format(
+            claim=wrap_user_content(claim), qa_block=_qa_block(answers)
+        )
         return self._llm.generate_structured(
             prompt, AggregatorOutput, max_tokens=500, temperature=0.0
         )

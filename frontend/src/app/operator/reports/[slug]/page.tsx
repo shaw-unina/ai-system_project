@@ -1,9 +1,9 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { use } from "react";
 import { fetchReport } from "@/lib/api";
+import Card from "@/components/ui/Card";
+import Markdown from "@/components/Markdown";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -15,20 +15,29 @@ export default function ReportPage({ params }: Props) {
   });
 
   return (
-    <div className="space-y-4">
-      <a className="text-xs text-blue-700 underline" href="/operator">
-        ← back to operator
+    <div className="space-y-6">
+      <a
+        className="inline-flex items-center gap-1 text-xs text-ink-muted hover:text-ink"
+        href="/operator"
+      >
+        <span aria-hidden>←</span> back to operator
       </a>
-      <h1 className="text-xl font-semibold font-mono">{slug}</h1>
-      {isLoading && <p className="text-sm text-slate-500">Loading…</p>}
-      {isError && <p className="text-sm text-rose-700">Could not load report.</p>}
+      <header className="space-y-1">
+        <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-brand-700">
+          report
+        </p>
+        <h1 className="font-mono text-lg text-ink">{slug}</h1>
+      </header>
+      {isLoading && <p className="text-sm text-ink-muted">Loading…</p>}
+      {isError && (
+        <p className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">
+          Could not load report.
+        </p>
+      )}
       {data && (
-        <article
-          className="prose prose-slate max-w-none rounded border border-slate-200 bg-white p-4 text-sm"
-          data-testid="report-content"
-        >
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{data}</ReactMarkdown>
-        </article>
+        <Card className="p-6" data-testid="report-content">
+          <Markdown>{data}</Markdown>
+        </Card>
       )}
     </div>
   );

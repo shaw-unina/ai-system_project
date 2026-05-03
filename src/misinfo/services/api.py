@@ -13,7 +13,7 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, Header, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import PlainTextResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -21,7 +21,13 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from misinfo import __version__
 from misinfo.config import get_settings
 from misinfo.repro import git_sha
+from misinfo.services.auth import (
+    enforce_rate_limit,
+    metrics_token_check,
+    require_api_key,
+)
 from misinfo.services.deps import get_factchecker
+from misinfo.services.second_opinion import router as second_opinion_router
 from misinfo.services.errors import (
     http_exception_handler,
     unhandled_exception_handler,
@@ -68,6 +74,7 @@ def create_app() -> FastAPI:
     app.add_exception_handler(StarletteHTTPException, http_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
     app.add_exception_handler(Exception, unhandled_exception_handler)
+    app.include_router(second_opinion_router)
 
     @app.get("/healthz", response_model=HealthResponse)
     def healthz() -> HealthResponse:
@@ -91,7 +98,8 @@ def create_app() -> FastAPI:
         )
 
     @app.get("/metrics")
-    def metrics() -> PlainTextResponse:
+    def metrics(authorization: str | None = Header(default=None)) -> PlainTextResponse:
+        metrics_token_check(authorization)
         return PlainTextResponse(METRICS.render_prometheus(), media_type="text/plain")
 
     @app.post("/v1/verify", response_model=VerifyResponse)
@@ -99,7 +107,9 @@ def create_app() -> FastAPI:
         body: VerifyRequest,
         request: Request,
         fc: Any = Depends(get_factchecker),
+        api_key: str = Depends(require_api_key),
     ) -> VerifyResponse:
+        enforce_rate_limit(request, key=api_key)
         rid = request.state.request_id
         t0 = time.perf_counter()
         verdict = fc.verify(body.claim)
@@ -111,7 +121,9 @@ def create_app() -> FastAPI:
         body: BatchRequest,
         request: Request,
         fc: Any = Depends(get_factchecker),
+        api_key: str = Depends(require_api_key),
     ) -> BatchResponse:
+        enforce_rate_limit(request, key=api_key)
         rid = request.state.request_id
         results = []
         for claim in body.claims:

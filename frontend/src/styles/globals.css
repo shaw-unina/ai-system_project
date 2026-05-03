@@ -2,10 +2,121 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: light;
+@layer base {
+  :root {
+    color-scheme: light;
+    /* shadcn semantic tokens (HSL components, no hsl() wrapper) */
+    --background: 60 20% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 16% 35%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 173 80% 30%;
+    --shadow-soft: 222 47% 11%;
+
+    /* Brand (teal) */
+    --brand-50: 166 76% 97%;
+    --brand-100: 167 85% 89%;
+    --brand-500: 173 80% 40%;
+    --brand-600: 175 84% 32%;
+    --brand-700: 175 77% 26%;
+    --brand-800: 176 69% 22%;
+    --brand-900: 176 61% 19%;
+
+    /* Accent (sky) */
+    --accent-500: 199 89% 48%;
+    --accent-600: 200 98% 39%;
+    --accent-700: 201 96% 32%;
+
+    /* Verdict tones — light */
+    --verdict-supported: 158 64% 25%;
+    --verdict-supported-bg: 152 81% 96%;
+    --verdict-supported-ring: 152 76% 80%;
+    --verdict-refuted: 0 70% 42%;
+    --verdict-refuted-bg: 0 86% 97%;
+    --verdict-refuted-ring: 0 93% 88%;
+    --verdict-unknown: 32 81% 33%;
+    --verdict-unknown-bg: 48 100% 96%;
+    --verdict-unknown-ring: 48 96% 80%;
+    --verdict-abstain: 215 16% 35%;
+    --verdict-abstain-bg: 210 20% 96%;
+    --verdict-abstain-ring: 220 13% 88%;
+  }
+
+  .dark {
+    color-scheme: dark;
+    --background: 222 47% 7%;
+    --foreground: 210 20% 96%;
+    --card: 222 40% 11%;
+    --card-foreground: 210 20% 96%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 70%;
+    --border: 217 33% 20%;
+    --input: 217 33% 20%;
+    --ring: 173 80% 50%;
+    --shadow-soft: 0 0% 0%;
+
+    --brand-50: 175 60% 14%;
+    --brand-100: 175 60% 18%;
+    --brand-500: 173 80% 48%;
+    --brand-600: 173 80% 55%;
+    --brand-700: 173 80% 65%;
+    --brand-800: 173 70% 75%;
+    --brand-900: 173 60% 85%;
+
+    --accent-500: 199 89% 60%;
+    --accent-600: 200 95% 68%;
+    --accent-700: 201 96% 75%;
+
+    /* Verdict tones — dark (chips read as soft pills with strong text) */
+    --verdict-supported: 152 70% 75%;
+    --verdict-supported-bg: 158 64% 13%;
+    --verdict-supported-ring: 158 50% 25%;
+    --verdict-refuted: 0 90% 80%;
+    --verdict-refuted-bg: 0 60% 15%;
+    --verdict-refuted-ring: 0 50% 28%;
+    --verdict-unknown: 48 96% 75%;
+    --verdict-unknown-bg: 32 70% 14%;
+    --verdict-unknown-ring: 32 50% 28%;
+    --verdict-abstain: 215 20% 75%;
+    --verdict-abstain-bg: 217 33% 15%;
+    --verdict-abstain-ring: 217 33% 25%;
+  }
+
+  html {
+    font-family: "Roboto", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  .display {
+    font-family: "Newsreader", ui-serif, Georgia, "Times New Roman", serif;
+    letter-spacing: -0.01em;
+  }
+
+  ::selection {
+    background: hsl(var(--brand-700) / 0.22);
+  }
+
+  *:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
 }
 
-body {
-  @apply bg-slate-50 text-slate-900;
+@layer utilities {
+  .font-display {
+    font-family: "Newsreader", ui-serif, Georgia, serif;
+  }
 }

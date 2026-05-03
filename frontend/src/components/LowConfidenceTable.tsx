@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { clearLowConf, loadLowConf } from "@/lib/lowconf";
-import type { LowConfRow } from "@/lib/types";
+import type { LowConfRow, VerdictLabel } from "@/lib/types";
+import VerdictChip from "./VerdictChip";
 
 export default function LowConfidenceTable() {
   const [rows, setRows] = useState<LowConfRow[]>([]);
@@ -15,7 +16,7 @@ export default function LowConfidenceTable() {
 
   if (rows.length === 0) {
     return (
-      <p className="text-sm text-slate-500 italic" data-testid="lowconf-empty">
+      <p className="text-sm text-ink-muted" data-testid="lowconf-empty">
         No low-confidence verdicts in this session yet.
       </p>
     );
@@ -23,31 +24,27 @@ export default function LowConfidenceTable() {
 
   return (
     <div data-testid="lowconf-table">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-left text-slate-500 border-b">
-            <th className="py-1 pr-3">When</th>
-            <th className="py-1 pr-3">Verdict</th>
-            <th className="py-1 pr-3">Conf.</th>
-            <th className="py-1">Claim</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.request_id} className="border-b last:border-0">
-              <td className="py-1 pr-3 font-mono text-xs text-slate-500">
-                {new Date(r.ts).toLocaleTimeString()}
-              </td>
-              <td className="py-1 pr-3">{r.verdict}</td>
-              <td className="py-1 pr-3 tabular-nums">{r.confidence.toFixed(3)}</td>
-              <td className="py-1 truncate">{r.claim_preview}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <ul className="divide-y divide-ink/5">
+        {rows.map((r) => (
+          <li key={r.request_id} className="grid grid-cols-[80px_1fr_70px] items-center gap-3 py-2 text-sm">
+            <span className="font-mono text-[11px] text-ink-muted">
+              {new Date(r.ts).toLocaleTimeString()}
+            </span>
+            <div className="flex min-w-0 items-center gap-2">
+              <VerdictChip verdict={r.verdict as VerdictLabel} />
+              <span className="truncate text-ink/80" title={r.claim_preview}>
+                {r.claim_preview}
+              </span>
+            </div>
+            <span className="text-right font-mono text-xs tabular-nums text-ink-muted">
+              {r.confidence.toFixed(3)}
+            </span>
+          </li>
+        ))}
+      </ul>
       <button
         type="button"
-        className="mt-3 text-xs text-slate-500 underline"
+        className="mt-3 cursor-pointer text-xs text-ink-muted hover:text-ink hover:underline"
         onClick={() => {
           clearLowConf();
           setRows([]);

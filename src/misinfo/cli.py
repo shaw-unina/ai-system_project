@@ -39,6 +39,38 @@ def _cmd_info(_: argparse.Namespace) -> int:
     return 0
 
 
+def _build_retriever(corpus_path: Path | None) -> Any:
+    """Resolve the retriever from settings.
+
+    - ``MISINFO_RETRIEVER=web`` (default): live Tavily web retrieval. Falls
+      back to an empty BM25 retriever if no SEARCH_API_KEY is configured.
+    - ``MISINFO_RETRIEVER=bm25``: BM25 over the configured corpus (path,
+      profile, or empty).
+    """
+    from misinfo.retrieve.bm25 import BM25Retriever
+    from misinfo.retrieve.corpus import EvidenceCorpus
+
+    s = get_settings()
+    if s.misinfo_retriever == "web" and s.search_api_key:
+        from misinfo.integrations.tavily import TavilyClient
+        from misinfo.retrieve.web import WebRetriever
+
+        return WebRetriever(
+            TavilyClient(s.search_api_key),
+            max_span_chars=1200,
+        )
+    # bm25 path (or web requested but no key — degrade with a warning)
+    if s.misinfo_retriever == "web" and not s.search_api_key:
+        import logging
+
+        logging.getLogger(__name__).warning(
+            "MISINFO_RETRIEVER=web but SEARCH_API_KEY is unset — "
+            "falling back to BM25 over the configured corpus."
+        )
+    corpus = EvidenceCorpus.from_jsonl(corpus_path) if corpus_path else EvidenceCorpus()
+    return BM25Retriever(corpus)
+
+
 def _build_factchecker(
     corpus_path: Path | None,
     *,
@@ -46,19 +78,16 @@ def _build_factchecker(
     head_path: Path | None = None,
     tau: float | None = None,
 ) -> Any:
-    """Wire up a RAGFactChecker over an optional JSONL corpus, with optional
-    calibrated abstention head + τ override.
+    """Wire up a RAGFactChecker. Retriever is resolved from settings (live
+    web by default; BM25 over the corpus when ``MISINFO_RETRIEVER=bm25``).
     """
     from misinfo.decompose.llm_decomposer import LLMDecomposer
     from misinfo.inference.factory import get_backend
     from misinfo.pipeline.orchestrator import RAGFactChecker
-    from misinfo.retrieve.bm25 import BM25Retriever
-    from misinfo.retrieve.corpus import EvidenceCorpus
     from misinfo.verify.aggregator import LLMAggregator
     from misinfo.verify.answerer import LLMAnswerer
 
-    corpus = EvidenceCorpus.from_jsonl(corpus_path) if corpus_path else EvidenceCorpus()
-    retriever = BM25Retriever(corpus)
+    retriever = _build_retriever(corpus_path)
     llm = get_backend()
 
     abstention = None

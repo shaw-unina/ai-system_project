@@ -1,0 +1,1 @@
+{"response": "{\"verdict\":\"NotEnoughEvidence\",\"confidence\":0.0,\"rationale\":\"The sub-questions Q1, Q2, and Q3 all have insufficient evidence, which does not provide enough information to support or refute the claim that the Eiffel Tower is in Paris.\",\"evidence\":[],\"extra\":{}}", "model_version": "llama-3.3-70b-versatile"}

@@ -7,6 +7,7 @@ from misinfo.inference.base import LanguageModel
 from misinfo.observability import traced
 from misinfo.pipeline.prompts import load
 from misinfo.schemas import SubQuestion
+from misinfo.verify.safety import wrap_user_content
 
 
 class _DecomposerOutput(BaseModel):
@@ -20,7 +21,9 @@ class LLMDecomposer:
 
     @traced("decompose")
     def decompose(self, claim: str, *, max_questions: int = 3) -> list[SubQuestion]:
-        prompt = self._template.format(claim=claim, max_questions=max_questions)
+        prompt = self._template.format(
+            claim=wrap_user_content(claim), max_questions=max_questions
+        )
         out = self._llm.generate_structured(
             prompt, _DecomposerOutput, max_tokens=400, temperature=0.0
         )

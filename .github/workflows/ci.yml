@@ -30,6 +30,12 @@ jobs:
         run: mypy src/misinfo
         continue-on-error: true   # advisory until Phase 11; existing diagnostics are IDE-only
 
+      - name: Dependency audit (pip-audit)
+        run: |
+          python -m pip install pip-audit
+          pip-audit --strict --ignore-vuln GHSA-irrelevant || true
+        continue-on-error: true   # advisory; tighten in a follow-up
+
       - name: Tests + coverage gate
         run: pytest --cov=src/misinfo --cov-report=term --cov-fail-under=70
 
@@ -66,6 +72,10 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: npm audit (high+)
+        run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true   # advisory; tighten in a follow-up
+
       - name: Lint
         run: npm run lint
 
@@ -77,3 +87,57 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true   # advisory; tighten once allowlist is curated
+
+  openapi-drift:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e '.[dev,inference,service]'
+      - name: Dump OpenAPI from FastAPI
+        run: |
+          python - <<'PY'
+          import json
+          from misinfo.services.api import create_app
+          app = create_app()
+          spec = app.openapi()
+          with open("openapi.json", "w") as f:
+              json.dump(spec, f, indent=2, sort_keys=True)
+          PY
+      - name: Regenerate TS types
+        working-directory: frontend
+        run: |
+          npm ci
+          npx openapi-typescript ../openapi.json -o openapi-types/api.regen.ts
+      - name: Diff against committed types
+        working-directory: frontend
+        run: |
+          if ! diff -u openapi-types/api.ts openapi-types/api.regen.ts; then
+            echo "::error::OpenAPI types drifted. Run 'npm run codegen:types' and commit." >&2
+            exit 1
+          fi
+        continue-on-error: true   # advisory until openapi-types/api.ts is committed

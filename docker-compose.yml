@@ -9,6 +9,15 @@ services:
     environment:
       - LANGFUSE_HOST=http://langfuse-server:3000
       - MISINFO_BACKEND=${MISINFO_BACKEND:-groq}
+      - MISINFO_CORPUS_PATH=${MISINFO_CORPUS_PATH:-}
+      - MISINFO_CORPUS_PROFILE=${MISINFO_CORPUS_PROFILE:-smoke}
+      - MISINFO_RETRIEVER=${MISINFO_RETRIEVER:-web}
+      - SEARCH_API_KEY=${SEARCH_API_KEY:-}
+      - SEARCH_MAX_RESULTS=${SEARCH_MAX_RESULTS:-5}
+      - GOOGLE_FACT_CHECK_API_KEY=${GOOGLE_FACT_CHECK_API_KEY:-}
+      - MISINFO_API_KEYS=${MISINFO_API_KEYS:-}
+      - MISINFO_METRICS_TOKEN=${MISINFO_METRICS_TOKEN:-}
+      - MISINFO_RATE_LIMIT_PER_MIN=${MISINFO_RATE_LIMIT_PER_MIN:-60}
     depends_on:
       - langfuse-server
     ports:
@@ -81,6 +90,9 @@ services:
     image: misinfo-frontend:dev
     environment:
       - BACKEND_URL=http://app:8000
+      - BACKEND_API_KEY=${BACKEND_API_KEY:-}
+      - BACKEND_METRICS_TOKEN=${BACKEND_METRICS_TOKEN:-}
+      - OPERATOR_PASSWORD=${OPERATOR_PASSWORD:-}
       - NODE_ENV=production
     ports:
       - "3002:3000"

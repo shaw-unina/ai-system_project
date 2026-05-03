@@ -3,10 +3,10 @@ import VerdictCard from "@/components/VerdictCard";
 import { mkVerify } from "./_fixtures";
 
 describe("VerdictCard", () => {
-  it("renders the verdict label and confidence", () => {
+  it("renders the verdict chip and confidence dial", () => {
     render(<VerdictCard response={mkVerify({ verdict: "Supported", confidence: 0.9 })} />);
-    expect(screen.getByTestId("verdict-label").textContent).toBe("Supported");
-    expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "90");
+    expect(screen.getByText(/Supported/i)).toBeInTheDocument();
+    expect(screen.getByRole("meter")).toHaveAttribute("aria-valuenow", "0.9");
   });
 
   it("shows the low-confidence flag when set", () => {
