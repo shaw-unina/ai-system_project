@@ -6,6 +6,8 @@ services:
     image: misinfo:dev
     env_file:
       - .env
+    networks:
+      - misinfo
     environment:
       - LANGFUSE_HOST=http://langfuse-server:3000
       - MISINFO_BACKEND=${MISINFO_BACKEND:-groq}
@@ -44,6 +46,8 @@ services:
       - TELEMETRY_ENABLED=false
     ports:
       - "3000:3000"
+    networks:
+      - misinfo
 
   langfuse-db:
     image: postgres:15
@@ -53,6 +57,8 @@ services:
       - POSTGRES_DB=postgres
     volumes:
       - langfuse-db-data:/var/lib/postgresql/data
+    networks:
+      - misinfo
 
   # ----- Phase 9 monitoring stack — opt-in via `--profile monitoring` -----
   prometheus:
@@ -65,6 +71,8 @@ services:
       - "9090:9090"
     depends_on:
       - app
+    networks:
+      - misinfo
 
   grafana:
     image: grafana/grafana:latest
@@ -81,6 +89,8 @@ services:
       - "3001:3000"
     depends_on:
       - prometheus
+    networks:
+      - misinfo
 
   # ----- Phase 10 frontend dashboard -----
   frontend:
@@ -94,13 +104,20 @@ services:
       - BACKEND_METRICS_TOKEN=${BACKEND_METRICS_TOKEN:-}
       - OPERATOR_PASSWORD=${OPERATOR_PASSWORD:-}
       - NODE_ENV=production
+      - HOSTNAME=0.0.0.0
     ports:
       - "3002:3000"
     depends_on:
       app:
         condition: service_healthy
+    networks:
+      - misinfo
 
 volumes:
   langfuse-db-data:
   prometheus-data:
   grafana-data:
+
+networks:
+  misinfo:
+    driver: bridge

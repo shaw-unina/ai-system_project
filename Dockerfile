@@ -25,7 +25,7 @@ COPY --chown=app:app pyproject.toml README.md LICENCE ./
 COPY --chown=app:app src ./src
 
 USER root
-RUN pip install --no-deps -e '.[inference,service]'
+RUN pip install -e '.[inference,service]'
 USER app
 
 EXPOSE 8000
