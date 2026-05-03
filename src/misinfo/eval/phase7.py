@@ -3,7 +3,7 @@
 The smoke path uses synthetic claims + MockBackend so CI can exercise the
 full pipeline end-to-end. The real-run path consumes Phase 3 artefacts
 (AVeriTeC dev + the LLM-paraphrase attack set) and is documented in
-[docs/phase-7-evaluation.md](docs/phase-7-evaluation.md). Only the smoke path
+the Phase 7 evaluation harness. Only the smoke path
 is tested.
 """
 from __future__ import annotations
@@ -207,7 +207,7 @@ def _select_tau(fc, threshold_rows: list[dict[str, Any]], target_coverage: float
 def run_phase7(config: Phase7Config) -> Phase7Runs:
     if not config.smoke:
         raise NotImplementedError(
-            "Real Phase 7 run is documented in docs/phase-7-evaluation.md; "
+            "Real Phase 7 run is documented in EVALUATION-REPORT.md; "
             "only --smoke is implemented in code per the approved Phase 7 plan."
         )
 

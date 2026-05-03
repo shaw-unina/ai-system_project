@@ -59,7 +59,7 @@ from the threadpool).
 - Phase 9 monitoring can scrape `/metrics` from a real Prometheus. Until then,
   manual inspection via `curl` is the workflow.
 - Auth / rate limiting are deferred to Phase 11. The service note in
-  `phase-8-decisions.md` flags it as a deploy-only-locally posture.
+  [LIMITATIONS.md](../LIMITATIONS.md) flags it as a deploy-only-locally posture.
 
 ## Alternatives considered
 

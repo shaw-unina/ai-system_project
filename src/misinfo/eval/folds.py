@@ -1,7 +1,7 @@
 """Deterministic 3-way split: calibration / threshold / eval folds.
 
 Used by the Phase 7 orchestrator to avoid τ-coverage double-dipping per
-[docs/phase-6-decisions.md](docs/phase-6-decisions.md).
+the calibration ADRs (0007, 0009).
 """
 from __future__ import annotations
 

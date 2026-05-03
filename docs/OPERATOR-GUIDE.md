@@ -114,7 +114,7 @@ If `MISINFO_LOWCONF_PERSIST=true`, low-confidence verdicts are stored in
 
 ## Releasing a new version
 
-See [phase-11-decisions.md](phase-11-decisions.md) — short version:
+Short version:
 
 ```bash
 # from main, fully merged from dev

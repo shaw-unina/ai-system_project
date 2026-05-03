@@ -99,7 +99,7 @@ code so they can be reviewed in PRs.
 | Retrieve (local)  | Whoosh BM25 over JSONL corpus              | `retrieve/bm25_retriever.py`               |
 | Answer            | Groq LLM, structured output                | `pipeline/answer.py`                       |
 | Aggregate         | Groq LLM, JSON schema                      | `verify/aggregator.py`                     |
-| Calibration       | Pluggable abstention head, τ-thresholding  | `verify/abstention.py`, models/calibration |
+| Calibration       | Pluggable abstention head, τ-thresholding  | `verify/abstention.py`                     |
 | Service           | FastAPI + uvicorn                          | `services/api.py`                          |
 | Auth              | Bearer tokens + sliding-window limiter     | `services/auth.py`                         |
 | Second opinion    | Google Fact Check Tools v1alpha1           | `services/second_opinion.py`               |
@@ -229,9 +229,9 @@ both modes. `next-themes` for system-default + manual toggle.
 
 ## 6. Evaluation results
 
-Detailed tables and figures live in
-[reports/phase7/](../reports/phase7/) and are summarised in
-[EVALUATION-REPORT.md](EVALUATION-REPORT.md). The headline:
+Detailed tables and figures are produced by `misinfo phase7 --smoke` into
+`reports/phase7/` and summarised in [EVALUATION-REPORT.md](EVALUATION-REPORT.md).
+The headline:
 
 | Metric                          | Baseline | misinfo v1.0.0 | Status                |
 |---------------------------------|----------|----------------|-----------------------|
@@ -360,7 +360,7 @@ must know:
 - **[docs/LIMITATIONS.md](LIMITATIONS.md)** — what the system is **not** suitable for.
 - **[docs/api.md](api.md)** — API contract (also at `/openapi.json`).
 - **[docs/adr/](adr/)** — 19 architecture decision records.
-- **[docs/phases.md](phases.md)** — the phase plan that drove the project.
+- **[docs/phase-11-security-review.md](phase-11-security-review.md)** — threat model + review.
 - **[docs/phase-2/SUCCESS-CRITERIA.md](phase-2/SUCCESS-CRITERIA.md)** — traceability matrix.
 - **Per-phase notes** — `docs/phase-{0..11}-*.md`.
 

@@ -43,7 +43,7 @@ Determinism: seeded torch RNG; manifest records model commit, prompt hash, seed.
 ## Out-of-scope uses
 
 - Generating misinformation targeting specific real-world claims that were not already in AVeriTeC's `Refuted` set.
-- Public release as a downloadable corpus. Per Phase 2 [ETHICS.md](../phase-2/ETHICS.md), only an illustrative sample of ≤ 50 examples ships in the repo; the full set is regenerable from code.
+- Public release as a downloadable corpus. Per project ethics (see [LIMITATIONS.md](../LIMITATIONS.md)), only an illustrative sample of ≤ 50 examples ships in the repo; the full set is regenerable from code.
 
 ## Known biases / limitations
 
@@ -54,7 +54,7 @@ Determinism: seeded torch RNG; manifest records model commit, prompt hash, seed.
 
 ## Dual-use posture
 
-The pipeline can be repurposed to generate misinformation at scale. Per [docs/phase-2/ETHICS.md](../phase-2/ETHICS.md):
+The pipeline can be repurposed to generate misinformation at scale. Per project ethics ([LIMITATIONS.md](../LIMITATIONS.md)):
 
 - We release the *code* and the *prompts*, not the full *data*.
 - We do not paraphrase claims outside AVeriTeC's verified-fake pool.

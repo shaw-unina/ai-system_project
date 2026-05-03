@@ -22,7 +22,7 @@ Switching the inference backend to Groq (ADR-0002) trades bit-identical reproduc
 - Strong observability without operational overhead.
 - Reproducibility narrative becomes "every run is replayable from its trace + cache" rather than "bit-identical numbers".
 - One more dep group (`inference` extras add `langfuse>=2,<3`).
-- **Default Cloud means trace data also leaves the box** (Langfuse SaaS sees prompts/responses, in addition to Groq seeing them). Acceptable for the project's public-AVeriTeC scope; flagged in [ETHICS.md](../phase-2/ETHICS.md). Switching to the self-hosted stack reverts the trace path to local-only.
+- **Default Cloud means trace data also leaves the box** (Langfuse SaaS sees prompts/responses, in addition to Groq seeing them). Acceptable for the project's public-AVeriTeC scope; flagged in [LIMITATIONS.md](../LIMITATIONS.md). Switching to the self-hosted stack reverts the trace path to local-only.
 
 ## Alternatives considered
 

@@ -24,7 +24,7 @@ Selection via env var `MISINFO_BACKEND ∈ {groq, llama_cpp, mock}`, default `gr
 
 ## Consequences
 
-- Phase 2 NFR-Lat-1 is comfortably satisfied (see updated latency table in [docs/phase-4-system-architecture.md](../phase-4-system-architecture.md)).
+- Phase 2 NFR-Lat-1 is comfortably satisfied (see updated latency table in [docs/ARCHITECTURE.md](../ARCHITECTURE.md)).
 - Phase 2 NFR-Repro-1 amended: bit-identical reproducibility scoped to the optional `llama_cpp` backend; the Groq path records `(model_id, model_version, seed, temperature, langfuse_trace_id)` in `Verdict.metadata`.
 - Phase 2 NFR-Priv-1 amended: under `MISINFO_BACKEND=groq`, claim text is sent to Groq.
 - We cannot officially submit to the AVeriTeC-2 leaderboard (rules require open-weights on a single 23 GB GPU). We still evaluate against AVeriTeC v2 dev/test and report numbers.

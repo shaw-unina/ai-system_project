@@ -32,7 +32,7 @@ without adopting a user model.
 
 - Multi-replica deploys multiply the effective quota by replica count
   (each process keeps its own bucket). Documented in
-  [phase-11-decisions.md](../phase-11-decisions.md).
+  the relevant ADRs.
 - Tests opt out by leaving `MISINFO_API_KEYS` unset.
 - The frontend reads `BACKEND_API_KEY` server-side only; the browser
   never sees the bearer token.

@@ -219,26 +219,12 @@ for the full carve-out.
 - [docs/LIMITATIONS.md](docs/LIMITATIONS.md) — what this system is **not** suitable for.
 
 ### For developers
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — full system diagram + module breakdown.
+- [docs/PROJECT-REPORT.md](docs/PROJECT-REPORT.md) — full project narrative across all phases.
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — system diagram + module breakdown.
 - [docs/api.md](docs/api.md) — API contract (also at `/openapi.json` when running).
 - [docs/adr/](docs/adr/) — 19 architecture decision records.
-- [docs/phases.md](docs/phases.md) — the phase plan that drove the project.
-
-### Per-phase notes
-| Phase | Topic                          | Doc                                                              |
-|-------|--------------------------------|------------------------------------------------------------------|
-| 0     | Foundations                    | [phase-0-foundations.md](docs/phase-0-foundations.md)            |
-| 1     | Research scouting              | [phase-1-research-scouting.md](docs/phase-1-research-scouting.md) |
-| 2     | Requirements + success criteria| [phase-2/](docs/phase-2/)                                        |
-| 3     | Data strategy                  | [phase-3-data-strategy.md](docs/phase-3-data-strategy.md)        |
-| 4     | System architecture            | [phase-4-system-architecture.md](docs/phase-4-system-architecture.md) |
-| 5     | Baseline implementation        | [phase-5-baseline-implementation.md](docs/phase-5-baseline-implementation.md) |
-| 6     | Calibrated abstention          | [phase-6-proposed-method.md](docs/phase-6-proposed-method.md)    |
-| 7     | Evaluation harness             | [phase-7-evaluation.md](docs/phase-7-evaluation.md)              |
-| 8     | FastAPI service                | [phase-8-service.md](docs/phase-8-service.md)                    |
-| 9     | Monitoring                     | [phase-9-monitoring.md](docs/phase-9-monitoring.md)              |
-| 10    | Frontend dashboard             | [phase-10-dashboard.md](docs/phase-10-dashboard.md)              |
-| 11    | Hardening + release            | [phase-11-hardening.md](docs/phase-11-hardening.md)              |
+- [docs/phase-2/SUCCESS-CRITERIA.md](docs/phase-2/SUCCESS-CRITERIA.md) — requirement traceability matrix.
+- [docs/phase-11-security-review.md](docs/phase-11-security-review.md) — threat model + review.
 
 ---
 
@@ -249,9 +235,7 @@ for the full carve-out.
 ├── docs/                Phase plans, ADRs, evaluation, model card, operator guide
 ├── data/                raw / interim / processed / external (gitignored when sensitive)
 ├── frontend/            Next.js 15 dashboard (verify + operator)
-├── models/              Trained calibration heads (gitignored)
-├── notebooks/           Exploratory work
-├── reports/             Generated evaluation reports + figures
+├── reports/             Generated evaluation reports
 ├── scripts/             Corpus builders, perf benchmarks, helpers
 ├── src/misinfo/         Importable package
 │   ├── config.py        Settings

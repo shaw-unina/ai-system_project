@@ -5,7 +5,7 @@
 
 ## Context
 
-Every consumer of the system (FastAPI in Phase 8, dashboard in Phase 10, batch CLI, eval harness in Phase 5) must agree on the `Verdict` shape. Phase 2 [SCOPE.md](../phase-2/SCOPE.md) defined it; Phase 4 lands it as code.
+Every consumer of the system (FastAPI in Phase 8, dashboard in Phase 10, batch CLI, eval harness in Phase 5) must agree on the `Verdict` shape. Project scope defined it; Phase 4 lands it as code.
 
 ## Decision
 

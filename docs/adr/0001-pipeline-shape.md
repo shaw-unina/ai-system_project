@@ -5,7 +5,7 @@
 
 ## Context
 
-Phase 1 [DECISION.md](../phase-1/DECISION.md) chose to compete on the AVeriTeC v2 evaluation. The 2025 AVeriTeC-2 shared-task winners (P07 CTU AIC, P08 HerO 2) all use the same shape: claim decomposition into yes/no sub-questions, per-question evidence retrieval, per-question answer extraction, and final verdict aggregation. Phase 1 also wants to expose retrieval-failure as a measurable signal for the abstention head — that requires the per-question structure.
+Phase 1 research chose to compete on the AVeriTeC v2 evaluation. The 2025 AVeriTeC-2 shared-task winners (P07 CTU AIC, P08 HerO 2) all use the same shape: claim decomposition into yes/no sub-questions, per-question evidence retrieval, per-question answer extraction, and final verdict aggregation. Phase 1 also wants to expose retrieval-failure as a measurable signal for the abstention head — that requires the per-question structure.
 
 ## Decision
 

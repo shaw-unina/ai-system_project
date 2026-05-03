@@ -1,7 +1,7 @@
 """Frozen pydantic models for the system contract.
 
-The shape of `Verdict` is locked at Phase 4 close (per docs/phase-2/SCOPE.md).
-Changes here require an amendment recorded in docs/phase-2/SCOPE.md.
+The shape of `Verdict` is locked at Phase 4 close (per project scope).
+Changes here require an ADR.
 """
 from __future__ import annotations
 

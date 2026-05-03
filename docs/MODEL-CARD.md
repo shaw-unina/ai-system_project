@@ -11,7 +11,7 @@ Single-claim verification: given a short text claim, the system returns one of
 `[0, 1]`, an evidence list, and a free-form rationale. Designed for **human-
 in-the-loop** review of news-style claims similar to AVeriTeC v2.
 
-**Primary use case (UC-1, [SCOPE.md](phase-2/SCOPE.md)):** an analyst submits a
+**Primary use case (UC-1, [the system scope](LIMITATIONS.md)):** an analyst submits a
 claim and inspects the verdict + evidence + rationale before publishing.
 
 ## Out of scope

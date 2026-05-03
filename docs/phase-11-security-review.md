@@ -88,7 +88,7 @@ checked**, **finding**, **action**.
   short-lived `threading.Lock` around the bucket update.
 - **Finding:** OK for single-replica deploys. Multi-replica needs a
   shared bucket store.
-- **Action:** documented in ADR-0015 and `phase-11-decisions.md`.
+- **Action:** documented in ADR-0015.
 
 ## 9. Logging
 
@@ -116,4 +116,4 @@ checked**, **finding**, **action**.
 | Logging | OK |
 
 Nothing in this review blocks a `v1.0.0` release. The follow-ups are
-captured in [phase-11-decisions.md](phase-11-decisions.md).
+captured in the relevant ADRs.

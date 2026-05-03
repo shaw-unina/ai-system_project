@@ -16,7 +16,7 @@ fetching beyond what the API gives, no state-management library.
 |---|---|---|
 | Framework | Next.js 15 App Router | User's pick; modern default; gives us API routes for the proxy pattern (ADR-0014). |
 | Language | TypeScript strict | Matches "typed end-to-end" goal; mirrors the FastAPI `VerifyResponse`. |
-| Styling | Tailwind CSS | Tiny review surface; consistent with phases.md. |
+| Styling | Tailwind CSS | Tiny review surface; consistent with project conventions. |
 | Data fetching | TanStack React Query | Mutations + polling + retry without writing a state-mgmt layer. |
 | Charts | Recharts | React-native, small enough, two charts only. |
 | Markdown | react-markdown + remark-gfm | Renders Phase 7 reports verbatim with table support. |

@@ -31,5 +31,5 @@ Where Phase 7 evaluation reports land. Two subdirectories matter:
 misinfo phase7 --smoke --out reports/_smoke/
 
 # Real (needs AVeriTeC + Groq)
-# See docs/phase-7-evaluation.md §Run.
+# Regenerate via the Phase 7 harness.
 ```
