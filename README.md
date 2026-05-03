@@ -1,62 +1,281 @@
 # Misinformation Detector
 
-LLM-based misinformation detection system. AI Systems Engineering course project (Prof. Pietrantuono).
+A closed-book misinformation verification system. Submit a short factual claim;
+the system decomposes it into sub-questions, retrieves evidence (live web
+search by default, or a local BM25 corpus), asks an LLM to score each piece
+of evidence, aggregates into a calibrated verdict — **Supported**, **Refuted**,
+**Not enough evidence**, or **Abstain** — and returns a rationale, the
+supporting evidence, and a confidence score the system is willing to defend.
 
-See [docs/phases.md](docs/phases.md) for the full phase plan and [docs/phase-0-foundations.md](docs/phase-0-foundations.md) for Phase 0 decisions.
+Built for the AI Systems Engineering course (Prof. Pietrantuono) as an
+end-to-end demonstration of how a research idea becomes a deployable,
+observable, auditable service.
 
-## Quickstart (conda)
+---
+
+## Highlights
+
+- **Closed-book RAG pipeline** — decompose → retrieve → answer → aggregate, with a calibrated abstention head that says "I don't know" when evidence is thin.
+- **Live web retrieval** by default (Tavily), with a switchable BM25 fallback over a local corpus (AVeriTeC, Wikipedia, or a small smoke set) for reproducible runs.
+- **Second-opinion sidecar** — Google Fact Check Tools results shown alongside the verdict for context (display-only; never feeds the pipeline).
+- **FastAPI service** — `/v1/verify`, `/v1/batch`, `/healthz`, `/metrics`, with bearer-token auth, per-key sliding-window rate limiting, and prompt-injection mitigations.
+- **Next.js 15 dashboard** — `/verify` for end users and `/operator` for live metrics, evaluation reports, and recent low-confidence cases. Light + dark mode, keyboard accessible.
+- **Observability** — Langfuse traces for LLM calls, Prometheus metrics for service health, Grafana dashboards in compose.
+- **CI/CD** — lint, typecheck, pytest, vitest, build, OpenAPI→TS drift check, advisory `pip-audit` / `npm audit` / `gitleaks`. Tagged releases publish cosign-signed images with SPDX SBOMs to GHCR.
+- **Documentation as a deliverable** — model card, evaluation report, operator guide, architecture overview, limitations, and 19 ADRs covering the load-bearing decisions.
+
+---
+
+## Architecture at a glance
+
+```
+                        ┌──────────────────┐
+   user claim  ──▶      │  /verify (Next)  │
+                        └────────┬─────────┘
+                                 │ proxy + auth
+                        ┌────────▼─────────┐
+                        │  FastAPI service │
+                        │  /v1/verify      │
+                        └────────┬─────────┘
+                                 │
+       ┌─────────────────────────┼─────────────────────────┐
+       │                         │                         │
+┌──────▼──────┐         ┌────────▼────────┐        ┌───────▼────────┐
+│ Decompose   │         │  Retrieve       │        │   Aggregate    │
+│ (LLM)       │         │  Web (Tavily)   │        │   (LLM)        │
+└──────┬──────┘         │  or BM25 corpus │        └───────┬────────┘
+       │                └────────┬────────┘                │
+       └──────► sub-questions ───┴────► evidence ──────────┘
+                                                            │
+                                              ┌─────────────▼──────────────┐
+                                              │  Calibrated abstention     │
+                                              │  → verdict + confidence    │
+                                              └─────────────┬──────────────┘
+                                                            │
+                                              ┌─────────────▼──────────────┐
+                                              │  /v1/second-opinion        │
+                                              │  (Google FC, display-only) │
+                                              └────────────────────────────┘
+```
+
+Full diagram and rationale: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+---
+
+## Quickstart — local dev
+
+### 1. Backend (Python)
 
 ```bash
 conda env create -f environment.yml
 conda activate misinfo
-cp .env.example .env   # then edit
-pytest -q
+cp .env.example .env       # then fill in API keys (see "Configuration")
+pytest -q                  # 22 tests should pass
+misinfo serve --host 127.0.0.1 --port 8000
 ```
 
-The package installs in editable mode automatically via `environment.yml`. After activation, `import misinfo` works from anywhere.
+The package installs in editable mode via `environment.yml` — `import misinfo`
+works from anywhere once the env is active.
 
-## Quickstart (Docker)
+### 2. Frontend (Next.js)
 
 ```bash
-docker compose build
-docker compose run --rm app
+cd frontend
+npm install
+npm run dev                # http://localhost:3002
 ```
 
-The `app` service runs a smoke test (`import misinfo`) until the FastAPI service arrives in Phase 8.
+Submit a claim on `/verify`; check live service health on `/operator`.
 
-## Frontend (Phase 10)
+### 3. Full stack (Docker Compose)
 
-A Next.js 15 dashboard lives in [frontend/](frontend/) — `/verify` for end-user claim submission and `/operator` for live `/metrics` tiles, Phase 7 reports, and session low-confidence cases. `docker compose up --build` brings it up at `http://localhost:3002` (the FastAPI service stays on `:8000`). For local dev: `cd frontend && npm install && npm run dev`. See [docs/phase-10-dashboard.md](docs/phase-10-dashboard.md).
+```bash
+docker compose up --build
+```
 
-## Hardening & Release (Phase 11)
+Brings up:
 
-For deploy-safe operation set `MISINFO_API_KEYS` (comma-separated bearer tokens), `BACKEND_API_KEY` (forwarded by the Next proxy), and `OPERATOR_PASSWORD` (gates `/operator`). With those empty the system runs unauthenticated, suitable only for local dev. Full reference in [docs/OPERATOR-GUIDE.md](docs/OPERATOR-GUIDE.md); the model card, evaluation report, architecture overview, and limitations live next to it. Releases are tagged `vX.Y.Z`; the `release` workflow publishes signed images to GHCR with attached SBOMs.
+| Service    | Port | What                                          |
+|------------|------|-----------------------------------------------|
+| `app`      | 8000 | FastAPI verification service                  |
+| `frontend` | 3002 | Next.js dashboard                             |
+| `langfuse` | 3000 | LLM trace UI                                  |
+| `grafana`  | 3001 | Metrics dashboards (Prometheus-backed)        |
+| `prometheus` | 9090 | Scrape target for `/metrics`                |
+
+---
 
 ## Configuration
 
-Settings are loaded by `misinfo.config.get_settings()` from (in priority order) process env, `.env`, then defaults. `.env` is gitignored — never commit secrets.
+`.env` is loaded by `misinfo.config.get_settings()`; never commit it.
+
+| Variable                        | Default                  | Purpose                                                             |
+|---------------------------------|--------------------------|---------------------------------------------------------------------|
+| `GROQ_API_KEY`                  | —                        | LLM provider for decompose / answer / aggregate.                    |
+| `MISINFO_MODEL_ID`              | `llama-3.3-70b-versatile`| Default model.                                                      |
+| `MISINFO_RETRIEVER`             | `web`                    | `web` (Tavily) or `bm25` (local corpus).                            |
+| `SEARCH_API_KEY`                | —                        | Tavily key when `MISINFO_RETRIEVER=web`.                            |
+| `MISINFO_CORPUS_PROFILE`        | `smoke`                  | `smoke`, `averitec`, `wiki`, or `union` (used when retriever=bm25). |
+| `GOOGLE_FACT_CHECK_API_KEY`     | —                        | Enables the second-opinion sidecar; leave empty to disable.         |
+| `LANGFUSE_PUBLIC_KEY` / `_SECRET_KEY` / `_HOST` | —        | LLM trace export.                                                   |
+| `MISINFO_API_KEYS`              | empty (auth disabled)    | Comma-separated bearer tokens accepted on `/v1/*`.                  |
+| `BACKEND_API_KEY`               | —                        | Token the Next proxy injects when calling FastAPI.                  |
+| `MISINFO_METRICS_TOKEN`         | empty                    | Token-gates `/metrics` if set.                                      |
+| `BACKEND_METRICS_TOKEN`         | —                        | Token the Next proxy uses for `/metrics`.                           |
+| `MISINFO_RATE_LIMIT_PER_MIN`    | `60`                     | Per-key sliding-window limit.                                       |
+| `OPERATOR_PASSWORD`             | empty (gate disabled)    | Cookie gate for `/operator`.                                        |
+
+`.env.example` holds the canonical list. Operator-side reference:
+[docs/OPERATOR-GUIDE.md](docs/OPERATOR-GUIDE.md).
+
+---
+
+## How verification works
+
+For each claim:
+
+1. **Decompose** — the LLM produces 3–5 atomic sub-questions whose answers, taken together, decide the claim. (`prompts/decompose.txt`)
+2. **Retrieve** — each sub-question is searched independently. The web retriever calls Tavily; the BM25 retriever scores against a local Whoosh-indexed corpus.
+3. **Answer** — the LLM scores each piece of retrieved evidence against its sub-question, returning a per-sub-question confidence.
+4. **Aggregate** — the LLM combines sub-answers into a single verdict + rationale, citing the evidence by source ID. (`prompts/aggregate.txt`)
+5. **Calibrated abstention** — the aggregated raw confidence is passed through a Phase-6 calibrated head; if it falls below τ, the verdict is rewritten to `Abstain` with the reasons exposed in the rationale.
+6. **Second opinion** (display-only) — the dashboard separately calls `/v1/second-opinion`, which queries Google Fact Check Tools with progressive query shortening (full claim → first sentence → first 8 words) and renders the results next to the verdict for context. These never feed the verify pipeline.
+
+Outputs always include: verdict, confidence, evidence list with source URLs and per-span scores, rationale, low-confidence flag, request ID, model ID, and (when enabled) Langfuse trace ID.
+
+---
+
+## Frontend dashboard
+
+Two surfaces, one design system:
+
+- **`/verify`** — claim textarea, animated confidence dial, verdict chip with semantic color and icon, rationale rendered as Markdown, evidence list with show-more, "Other fact-checkers say" sidecar with Google attribution.
+- **`/operator`** — KPI tiles (requests, median latency, slowest 5%, average), recent latency sparkline, verdict-mix bar chart, evaluation report list, recent low-confidence cases (held in browser session only).
+
+Dark + light mode via `next-themes` (system default, manual toggle in nav).
+Editorial typography (Newsreader display, Roboto UI), shadcn-style HSL token
+system, semantic verdict palette that adapts to both themes. Design rationale:
+[docs/adr/0019-design-system.md](docs/adr/0019-design-system.md).
+
+---
+
+## Tests
+
+| Suite     | Command                                  | Count       |
+|-----------|------------------------------------------|-------------|
+| Backend   | `pytest -q`                              | 22 tests    |
+| Frontend  | `cd frontend && npm run test -- --run`   | 18 tests    |
+| E2E       | `cd frontend && npm run e2e`             | tag-only CI |
+
+Backend covers the pipeline (decompose, retrieve, aggregate), the calibrated
+abstention head, the FastAPI service, prompt-injection sanitisation, bearer
+auth + rate limiting, and the second-opinion sidecar. Frontend covers the
+verdict card, confidence dial, disclosure badge popover, low-confidence
+session table, second-opinion card, and the metrics parser.
+
+---
+
+## Operations
+
+- **Auth** — set `MISINFO_API_KEYS` to a comma-separated allowlist of bearer tokens. Empty = unauthenticated (local dev only).
+- **Rate limit** — `MISINFO_RATE_LIMIT_PER_MIN` per token, sliding-window, in-process.
+- **Metrics** — `/metrics` exposes Prometheus text. Token-gate with `MISINFO_METRICS_TOKEN`.
+- **Operator gate** — `/operator` is cookie-gated by `OPERATOR_PASSWORD`. Empty = open (local dev only).
+- **Security headers** — Next middleware sets CSP, HSTS (prod), X-Frame-Options, X-Content-Type-Options, Referrer-Policy.
+
+Threat model and review: [docs/phase-11-security-review.md](docs/phase-11-security-review.md).
+
+---
+
+## Releases
+
+- Push a tag `vX.Y.Z` → `release.yml` builds backend + frontend images, signs with cosign keyless (GitHub OIDC), attaches SPDX SBOMs (syft), publishes to GHCR.
+- Verify a release: `cosign verify ghcr.io/OWNER/misinfo:vX.Y.Z --certificate-identity-regexp ... --certificate-oidc-issuer https://token.actions.githubusercontent.com`.
+- E2E tests run on tags only (Playwright in CI).
+
+---
 
 ## Reproducibility
 
 `misinfo.repro` provides:
-- `seed_everything(seed)` — seeds `random`, `numpy`, and `PYTHONHASHSEED`.
+
+- `seed_everything(seed)` — seeds `random`, `numpy`, `PYTHONHASHSEED`.
 - `hash_file(path)` / `hash_dir(path)` — sha256 fingerprints for data/model artifacts.
 - `git_sha()` — current commit, for run metadata.
+
+Bit-identical reruns are guaranteed only for `MISINFO_RETRIEVER=bm25` with a
+pinned corpus and `llama_cpp` local inference. Web retrieval and remote LLMs
+are non-deterministic by nature; see [docs/MODEL-CARD.md](docs/MODEL-CARD.md)
+for the full carve-out.
+
+---
+
+## Documentation map
+
+### For users / operators
+- [docs/OPERATOR-GUIDE.md](docs/OPERATOR-GUIDE.md) — running the service, env vars, troubleshooting.
+- [docs/MODEL-CARD.md](docs/MODEL-CARD.md) — intended use, training data, calibration scope, known failure modes.
+- [docs/EVALUATION-REPORT.md](docs/EVALUATION-REPORT.md) — Phase 7 numbers on AVeriTeC.
+- [docs/LIMITATIONS.md](docs/LIMITATIONS.md) — what this system is **not** suitable for.
+
+### For developers
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — full system diagram + module breakdown.
+- [docs/api.md](docs/api.md) — API contract (also at `/openapi.json` when running).
+- [docs/adr/](docs/adr/) — 19 architecture decision records.
+- [docs/phases.md](docs/phases.md) — the phase plan that drove the project.
+
+### Per-phase notes
+| Phase | Topic                          | Doc                                                              |
+|-------|--------------------------------|------------------------------------------------------------------|
+| 0     | Foundations                    | [phase-0-foundations.md](docs/phase-0-foundations.md)            |
+| 1     | Research scouting              | [phase-1-research-scouting.md](docs/phase-1-research-scouting.md) |
+| 2     | Requirements + success criteria| [phase-2/](docs/phase-2/)                                        |
+| 3     | Data strategy                  | [phase-3-data-strategy.md](docs/phase-3-data-strategy.md)        |
+| 4     | System architecture            | [phase-4-system-architecture.md](docs/phase-4-system-architecture.md) |
+| 5     | Baseline implementation        | [phase-5-baseline-implementation.md](docs/phase-5-baseline-implementation.md) |
+| 6     | Calibrated abstention          | [phase-6-proposed-method.md](docs/phase-6-proposed-method.md)    |
+| 7     | Evaluation harness             | [phase-7-evaluation.md](docs/phase-7-evaluation.md)              |
+| 8     | FastAPI service                | [phase-8-service.md](docs/phase-8-service.md)                    |
+| 9     | Monitoring                     | [phase-9-monitoring.md](docs/phase-9-monitoring.md)              |
+| 10    | Frontend dashboard             | [phase-10-dashboard.md](docs/phase-10-dashboard.md)              |
+| 11    | Hardening + release            | [phase-11-hardening.md](docs/phase-11-hardening.md)              |
+
+---
 
 ## Project layout
 
 ```
 .
-├── docs/                 Phase plan and decision records
-├── data/                 raw / interim / processed / external (gitignored when sensitive)
-├── models/               Trained model artifacts (gitignored)
-├── notebooks/            Exploratory notebooks
-├── references/           Briefs, papers, manuals
-├── reports/              Generated analysis and figures
-├── src/misinfo/          Importable package (config, repro, logging, modeling, services)
-├── tests/                Pytest suite
-├── environment.yml       Conda environment
-├── pyproject.toml        Build, deps, tool config
-├── Dockerfile            Multi-stage build (builder → runtime)
-└── docker-compose.yml    Local deployment
+├── docs/                Phase plans, ADRs, evaluation, model card, operator guide
+├── data/                raw / interim / processed / external (gitignored when sensitive)
+├── frontend/            Next.js 15 dashboard (verify + operator)
+├── models/              Trained calibration heads (gitignored)
+├── notebooks/           Exploratory work
+├── reports/             Generated evaluation reports + figures
+├── scripts/             Corpus builders, perf benchmarks, helpers
+├── src/misinfo/         Importable package
+│   ├── config.py        Settings
+│   ├── decompose/       Sub-question generation
+│   ├── retrieve/        Web (Tavily) + BM25 retrievers
+│   ├── verify/          Aggregation, calibration, prompt safety
+│   ├── services/        FastAPI app, auth, second-opinion sidecar
+│   └── pipeline/        Orchestration + prompts
+├── tests/               Pytest suite
+├── .github/workflows/   CI, E2E, release
+├── docker-compose.yml   Full stack (app + frontend + langfuse + prom + grafana)
+├── Dockerfile           Backend image (multi-stage, non-root)
+├── frontend/Dockerfile  Frontend image
+├── pyproject.toml       Build + deps + tool config
+├── environment.yml      Conda env
+└── Makefile             dev / test / perf / docker shortcuts
 ```
+
+---
+
+## License & attribution
+
+- Course project; see repository LICENSE for terms.
+- Verdicts shown alongside Google Fact Check Tools results are © their respective publishers (Snopes, AFP, USA Today, etc.); we display them via the public Fact Check Tools API and link back to the originals.
+- Web search powered by [Tavily](https://tavily.com).
+- LLM inference via [Groq](https://groq.com).
+- Trace export via [Langfuse](https://langfuse.com).
